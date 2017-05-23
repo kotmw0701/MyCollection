@@ -30,13 +30,13 @@ public class Polar_coodinates {
 		return new Location(world, x, y, z);
 	}
 	
-	public World getworld() {return world;}
+	public World getWorld() {return world;}
 	
-	public double getradius() {return radius;}
+	public double getRadius() {return radius;}
 	
-	public double getpitch() {return theta;}
+	public double getTheta() {return theta;}
 	
-	public double getyaw() {return phi;}
+	public double getPhi() {return phi;}
 
 	public void setWorld(World world) {this.world = world;}
 
