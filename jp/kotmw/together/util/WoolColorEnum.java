@@ -2,6 +2,7 @@ package jp.kotmw.together.util;
 
 import java.math.BigDecimal;
 
+@Deprecated
 public enum WoolColorEnum {
 
 	WHITE(0xff,0xff,0xff),

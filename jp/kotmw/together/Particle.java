@@ -12,6 +12,7 @@ import jp.kotmw.together.util.WoolColorEnum;
 import net.minecraft.server.v1_10_R1.EnumParticle;
 import net.minecraft.server.v1_10_R1.PacketPlayOutWorldParticles;
 
+@SuppressWarnings("deprecation")
 public class Particle extends BukkitRunnable {
 
 	int tick = 0;

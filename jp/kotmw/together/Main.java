@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -32,12 +33,18 @@ import org.bukkit.plugin.java.JavaPlugin;
 import com.sk89q.worldedit.bukkit.WorldEditPlugin;
 import com.sk89q.worldedit.bukkit.selections.Selection;
 
+import jp.kotmw.together.bossmonster.Boss;
+import jp.kotmw.together.bossmonster.BossListeners;
+import jp.kotmw.together.bossmonster.skills.Instant_Death;
 import jp.kotmw.together.getvisibleplayer.Test1;
 import jp.kotmw.together.test2.Test2;
+import jp.kotmw.together.util.ParticleAPI;
+import jp.kotmw.together.util.ParticleAPI.EnumParticle;
 
 public class Main extends JavaPlugin implements Listener {
 
 	public static Main instance;
+	public static boolean bossdebug;
 	String Collectmovemeta = "CollectPluginMeta";
 	Map<String, Location> checkloc = new HashMap<>();
 	static Map<Location, Integer> rt = new HashMap<>();
@@ -46,6 +53,7 @@ public class Main extends JavaPlugin implements Listener {
 	public String filepath = getDataFolder() + File.separator;
 	public File dir = new File(filepath + "mazes");
 	public File config = new File(filepath + "Config.yml");
+	public Boss boss;
 
 	@Override
 	public void onEnable() {
@@ -53,6 +61,7 @@ public class Main extends JavaPlugin implements Listener {
 		getServer().getPluginManager().registerEvents(this, this);
 		getServer().getPluginManager().registerEvents(new Test1(), this);
 		getServer().getPluginManager().registerEvents(new Test2(), this);
+		getServer().getPluginManager().registerEvents(new BossListeners(), this);
 		if(!config.exists()) {
 			this.getConfig().addDefault("Test", "test");
 			this.getConfig().options().copyDefaults(true);
@@ -76,6 +85,35 @@ public class Main extends JavaPlugin implements Listener {
 				Player p = (Player)s;
 				if((args.length == 1) && ("place".equalsIgnoreCase(args[0]))) {
 					p.setMetadata(Collectmovemeta, new FixedMetadataValue(this, p.getName()));
+				} else if((args.length == 1) && ("boss_spawn".equalsIgnoreCase(args[0]))) {
+					Main.instance.boss = new Boss(p.getLocation());
+				} else if((args.length == 1) && ("boss_start".equalsIgnoreCase(args[0]))) {
+					if(Main.instance.boss == null) {
+						p.sendMessage("ボスが設置されていません");
+						return false;
+					}
+					if(Main.instance.boss.isStarted())
+						return false;
+					Main.instance.boss.start();
+				} else if((args.length == 1) && ("boss_kill".equalsIgnoreCase(args[0]))) {
+					if(Main.instance.boss == null) {
+						p.sendMessage("ボスが設置されていません");
+						return false;
+					}
+					Main.instance.boss.kill();
+					Main.instance.boss = null;
+				} else if((args.length == 1) && ("boss_instant").equalsIgnoreCase(args[0])){
+					if(Main.instance.boss == null) {
+						p.sendMessage("ボスが設置されていません");
+						return false;
+					}
+					new Instant_Death(Main.instance.boss);
+				} else if((args.length == 1) && ("boss_debug").equalsIgnoreCase(args[0])) {
+					p.sendMessage("[BossSystem] デバッグモードを"+!bossdebug+"に変更しました");
+					bossdebug = !bossdebug;
+					return true;
+				} else if((args.length == 1) && ("boss_ai").equalsIgnoreCase(args[0])) {
+					Main.instance.boss.getBoss().setAI(true);
 				} else if((args.length == 1) && ("stop".equalsIgnoreCase(args[0]))) {
 					if(p.hasMetadata(Collectmovemeta))
 						p.removeMetadata(Collectmovemeta, this);
@@ -346,6 +384,18 @@ public class Main extends JavaPlugin implements Listener {
 				stands.clear();
 			}
 		}, 20*5);
+	}
+	
+	public static void sendPlayersParticle(EnumParticle type, Location center, float param1, float param2, float param3, Collection<? extends Player> collection) {
+		collection.stream().filter(player -> center.getWorld().getName().equals(player.getLocation().getWorld().getName())).forEach(player -> {
+			new ParticleAPI.Particle(type, 
+					center, 
+					param1, 
+					param2, 
+					param3, 
+					1, 
+					0).sendParticle(player);
+		});
 	}
 
 
