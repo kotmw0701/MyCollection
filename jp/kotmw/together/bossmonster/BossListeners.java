@@ -7,6 +7,11 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.entity.EntityDamageEvent;
+import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
+import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.util.Vector;
 
 import jp.kotmw.together.Main;
@@ -14,7 +19,7 @@ import jp.kotmw.together.Main;
 public class BossListeners implements Listener{
 	
 	@EventHandler
-	public void onDamage(EntityDamageByEntityEvent e) {
+	public void onDamagebyEntity(EntityDamageByEntityEvent e) {
 		if(Main.instance.boss == null || Main.instance.boss.getBoss().isDead())
 			return;
 		if(!Main.instance.boss.isBoss(e.getEntity()))
@@ -47,6 +52,50 @@ public class BossListeners implements Listener{
 			return;
 		}
 		e.setDamage(e.getDamage()/5);
-		Main.instance.boss.addDamage(player.getName(), (e.getDamage()/5));
+		Main.instance.boss.addDamage(player.getName(), e.getDamage());
+	}
+	
+	@EventHandler
+	public void onDamage(EntityDamageEvent e) {
+		if(Main.instance.boss == null || Main.instance.boss.getBoss().isDead())
+			return;
+		if(!Main.instance.boss.isBoss(e.getEntity()))
+			return;
+		if(!Main.instance.boss.isStarted()) {
+			e.setCancelled(true);
+			return;
+		}
+		DamageCause cause = e.getCause();
+		if(cause.equals(DamageCause.ENTITY_ATTACK) 
+				|| cause.equals(DamageCause.FIRE_TICK))
+			return;
+		e.setCancelled(true);
+	}
+	
+	@EventHandler
+	public void onDeath(PlayerDeathEvent e) {
+		Player player = e.getEntity();
+		if(!Main.instance.boss.isChallenger(player))
+			return;
+		Main.instance.boss.setPrioritychallenger(player.getName());
+	}
+	
+	@EventHandler
+	public void onTeleport(PlayerTeleportEvent e) {
+		Player player = e.getPlayer();
+		if(!Main.instance.boss.isChallenger(player))
+			return;
+		if(e.getFrom().getWorld() == e.getTo().getWorld())
+			return;
+		Main.instance.boss.setPrioritychallenger(player.getName());
+	}
+	
+	@EventHandler
+	public void onLogout(PlayerQuitEvent e) {
+		if(Main.instance.boss == null || Main.instance.boss.getBoss().isDead())
+			return;
+		if(!Main.instance.boss.isChallenger(e.getPlayer()))
+			return;
+		Main.instance.boss.leavePlayer(e.getPlayer().getName());
 	}
 }

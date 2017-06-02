@@ -35,7 +35,6 @@ import com.sk89q.worldedit.bukkit.selections.Selection;
 
 import jp.kotmw.together.bossmonster.Boss;
 import jp.kotmw.together.bossmonster.BossListeners;
-import jp.kotmw.together.bossmonster.skills.Instant_Death;
 import jp.kotmw.together.getvisibleplayer.Test1;
 import jp.kotmw.together.test2.Test2;
 import jp.kotmw.together.util.ParticleAPI;
@@ -86,6 +85,8 @@ public class Main extends JavaPlugin implements Listener {
 				if((args.length == 1) && ("place".equalsIgnoreCase(args[0]))) {
 					p.setMetadata(Collectmovemeta, new FixedMetadataValue(this, p.getName()));
 				} else if((args.length == 1) && ("boss_spawn".equalsIgnoreCase(args[0]))) {
+					if(Main.instance.boss != null && !Main.instance.boss.getBoss().isDead())
+						Main.instance.boss.getBoss().remove();
 					Main.instance.boss = new Boss(p.getLocation());
 				} else if((args.length == 1) && ("boss_start".equalsIgnoreCase(args[0]))) {
 					if(Main.instance.boss == null) {
@@ -102,12 +103,9 @@ public class Main extends JavaPlugin implements Listener {
 					}
 					Main.instance.boss.kill();
 					Main.instance.boss = null;
-				} else if((args.length == 1) && ("boss_instant").equalsIgnoreCase(args[0])){
-					if(Main.instance.boss == null) {
-						p.sendMessage("ボスが設置されていません");
-						return false;
-					}
-					new Instant_Death(Main.instance.boss);
+				} else if((args.length == 1) && ("boss_ai").equalsIgnoreCase(args[0])) { 
+					boss.getBoss().setAI(false);
+					boss.getBoss().setTarget(null);
 				} else if((args.length == 1) && ("boss_debug").equalsIgnoreCase(args[0])) {
 					p.sendMessage("[BossSystem] デバッグモードを"+!bossdebug+"に変更しました");
 					bossdebug = !bossdebug;

@@ -13,7 +13,6 @@ public abstract class BossAttackRange extends Thread {
 	
 	public BossAttackRange(Boss boss) {
 		this.boss = boss;
-		start();
 	}
 	
 	@Override
