@@ -29,6 +29,7 @@ import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.util.Vector;
 
 import com.sk89q.worldedit.bukkit.WorldEditPlugin;
 import com.sk89q.worldedit.bukkit.selections.Selection;
@@ -36,7 +37,10 @@ import com.sk89q.worldedit.bukkit.selections.Selection;
 import jp.kotmw.together.bossmonster.Boss;
 import jp.kotmw.together.bossmonster.BossListeners;
 import jp.kotmw.together.getvisibleplayer.Test1;
+import jp.kotmw.together.test2.Polar_coodinates;
 import jp.kotmw.together.test2.Test2;
+import jp.kotmw.together.util.DetailsColor;
+import jp.kotmw.together.util.DetailsColor.DetailsColorType;
 import jp.kotmw.together.util.ParticleAPI;
 import jp.kotmw.together.util.ParticleAPI.EnumParticle;
 
@@ -103,9 +107,25 @@ public class Main extends JavaPlugin implements Listener {
 					}
 					Main.instance.boss.kill();
 					Main.instance.boss = null;
+				} else if((args.length == 2) && ("rad").equalsIgnoreCase(args[0])){ 
+					Player player2 = Bukkit.getPlayer(args[1]);
+					if(player2 == null)
+						return false;
+					Location loc = p.getLocation(), loc2 = player2.getLocation();
+					DetailsColor color = DetailsColorType.WoolColor_GREEN.getColor();
+					for(double radius = 0; radius <= 20; radius+= 0.2) {
+						Main.sendPlayersParticle(EnumParticle.REDSTONE, 
+								loc.clone().add(new Polar_coodinates(loc.getWorld(), radius, Math.atan2(loc2.getX()-loc.getX(), loc2.getZ()-loc.getZ()), 0).convertLocation()), 
+								color.getRed(), 
+								color.getGreen(), 
+								color.getBlue(),
+								Bukkit.getOnlinePlayers());
+					}
 				} else if((args.length == 1) && ("boss_ai").equalsIgnoreCase(args[0])) { 
-					boss.getBoss().setAI(false);
+					Vector vec1 = boss.getBoss().getLocation().getDirection(); 
+					boss.getBoss().setVelocity(new Vector(-vec1.getX(), -vec1.getY(), -vec1.getZ()));
 					boss.getBoss().setTarget(null);
+					boss.getBoss().setAI(false);
 				} else if((args.length == 1) && ("boss_debug").equalsIgnoreCase(args[0])) {
 					p.sendMessage("[BossSystem] デバッグモードを"+!bossdebug+"に変更しました");
 					bossdebug = !bossdebug;

@@ -10,7 +10,7 @@ import jp.kotmw.together.util.DetailsColor;
 
 public class BossAttackRange_Circle extends BossAttackRange {
 
-	private List<Location> center = new ArrayList<>();;
+	private List<Location> center = new ArrayList<>();
 	private double radius;
 	private double radius_;
 	private int expantiontick;
@@ -18,12 +18,23 @@ public class BossAttackRange_Circle extends BossAttackRange {
 	private DetailsColor color = new DetailsColor("#ff5000");
 	private DetailsColor color2 = new DetailsColor("#ff3000");
 	
+	
 	public BossAttackRange_Circle(Boss boss, Location center, double radius) {
 		super(boss);
 		this.center.add(center);
 		this.radius = radius;
 		this.expantiontick = 10;
 		this.showtick = 50;
+	}
+	
+	public BossAttackRange_Circle(Boss boss, Location center, double radius, DetailsColor color1, DetailsColor color2) {
+		super(boss);
+		this.center.add(center);
+		this.radius = radius;
+		this.expantiontick = 10;
+		this.showtick = 50;
+		this.color = color1;
+		this.color2 = color2;
 	}
 	
 	public BossAttackRange_Circle(Boss boss, Location center, double radius, int param1, int param2) {
@@ -34,12 +45,32 @@ public class BossAttackRange_Circle extends BossAttackRange {
 		this.showtick = param2;
 	}
 	
+	public BossAttackRange_Circle(Boss boss, Location center, double radius, int param1, int param2, DetailsColor color1, DetailsColor color2) {
+		super(boss);
+		this.center.add(center);
+		this.radius = radius;
+		this.expantiontick = param1;
+		this.showtick = param2;
+		this.color = color1;
+		this.color2 = color2;
+	}
+	
 	public BossAttackRange_Circle(Boss boss, List<Location> center, double radius, int param1, int param2) {
 		super(boss);
 		this.center = center;
 		this.radius = radius;
 		this.expantiontick = param1;
 		this.showtick = param2;
+	}
+	
+	public BossAttackRange_Circle(Boss boss, List<Location> center, double radius, int param1, int param2, DetailsColor color1, DetailsColor color2) {
+		super(boss);
+		this.center = center;
+		this.radius = radius;
+		this.expantiontick = param1;
+		this.showtick = param2;
+		this.color = color1;
+		this.color2 = color2;
 	}
 	
 	@Override

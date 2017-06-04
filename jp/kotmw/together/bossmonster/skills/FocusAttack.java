@@ -27,7 +27,7 @@ public class FocusAttack extends SkillBase {
 		locs.forEach(loc -> loc.getWorld().createExplosion(loc.getX(), 
 				loc.getY(), 
 				loc.getZ(), 
-				5, false, false));
+				2.5f, false, false));
 		cancel();
 	}
 }

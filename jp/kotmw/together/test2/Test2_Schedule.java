@@ -30,11 +30,9 @@ public class Test2_Schedule extends BukkitRunnable {
 		for(double theta = 0; theta <= 2*Math.PI; theta+=Math.PI/90) {
 			//Polar_coodinates pc = new Polar_coodinates(center.getWorld(),(theta / Math.PI), theta, Math.toRadians(30));
 			//Polar_coodinates pc = new Polar_coodinates(center.getWorld(),(Math.sin(2*theta))*4, theta, 0);
-			Polar_coodinates pc = new Polar_coodinates(center.getWorld(), radius, theta, 0);
-			Polar_coodinates pc2 = new Polar_coodinates(center.getWorld(), 5, theta, 0);
+			Polar_coodinates pc = new Polar_coodinates(center.getWorld(), 5, theta, Math.toRadians(phidegree));
 			//Polar_coodinates pc = new Polar_coodinates(center.getWorld(),3*(1+Math.cos(theta)) , theta, Math.toRadians(30));
 			DetailsColor color = new DetailsColor("#ff6000");
-			DetailsColor color2 = new DetailsColor("#ff4000");
 			Bukkit.getOnlinePlayers().stream().filter(player -> pc.getWorld().getName().equals(player.getLocation().getWorld().getName()))
 			.forEach(player -> {
 				new ParticleAPI.Particle(EnumParticle.REDSTONE, 
@@ -42,13 +40,6 @@ public class Test2_Schedule extends BukkitRunnable {
 					color.getRed(), 
 					color.getGreen(), 
 					color.getBlue(), 
-					1, 
-					0).sendParticle(player);
-				new ParticleAPI.Particle(EnumParticle.REDSTONE, 
-					center.clone().add(pc2.convertLocation()), 
-					color2.getRed(), 
-					color2.getGreen(), 
-					color2.getBlue(), 
 					1, 
 					0).sendParticle(player);
 			});

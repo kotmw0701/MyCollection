@@ -37,7 +37,7 @@ public abstract class SkillBase extends Thread {
 						bsr.cancel();
 				count++;
 			}
-			if(getBoss().isDead()) {
+			if(getBoss().isDead() || !running) {
 				cancel();
 				return;
 			}
@@ -62,20 +62,7 @@ public abstract class SkillBase extends Thread {
 		(new BukkitRunnable() {
 			@Override
 			public void run() {
-				double damage2 = damage;
-				switch(boss.getBoss().getWorld().getDifficulty()) {
-				case EASY:
-					damage2 *= 2;
-					break;
-				case HARD:
-					damage2 *= 0.5;
-					break;
-				case NORMAL:
-					break;
-				default:
-					return;
-				}
-				livingentity.damage(damage2, boss.getBoss());
+				livingentity.damage(boss.getDiffDamage(damage), boss.getBoss());
 			}
 		}).runTask(Main.instance);
 	}
@@ -83,7 +70,6 @@ public abstract class SkillBase extends Thread {
 	protected void sendReddust(Location center, DetailsColor color) {
 		sendParticle(EnumParticle.REDSTONE, center, color.getRed(), color.getGreen(), color.getBlue(), false, 0.0);
 	}
-	
 	protected void sendReddust(Location center, DetailsColor color, boolean damage, double damageparam) {
 		sendParticle(EnumParticle.REDSTONE, center, color.getRed(), color.getGreen(), color.getBlue(), damage, damageparam);
 	}
@@ -107,12 +93,11 @@ public abstract class SkillBase extends Thread {
 	}
 	
 	protected void setDamageParticle(Location particleloc, double damage, Entity entity) {
-		AxisAlignedBB aabb = new AxisAlignedBB(particleloc.getX()+0.01, particleloc.getY()-0.01, particleloc.getZ()-0.01, particleloc.getX()+0.01, particleloc.getY()+0.01, particleloc.getZ()+0.01);
+		AxisAlignedBB aabb = new AxisAlignedBB(particleloc.getX()+0.05, particleloc.getY()-0.05, particleloc.getZ()-0.05, particleloc.getX()+0.05, particleloc.getY()+0.05, particleloc.getZ()+0.05);
 		Location entityloc = entity.getLocation();
 		boolean a = aabb.a(entityloc.getX()-0.4, entityloc.getY()-0.0, entityloc.getZ()-0.4, entityloc.getX()+0.4, entityloc.getY()+1.8, entityloc.getZ()+0.4);
 		if(a) syncDamage(damage, entity);
 	}
-	
 	protected void resetLocation() {
 		getBoss().teleport(boss.getCenterLocation());
 		getBoss().setVelocity(new Vector(0, 0, 0));

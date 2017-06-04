@@ -58,11 +58,17 @@ public class Test2 implements Listener {
 			stand.setCustomNameVisible(true);
 		} else if(player.getInventory().getItemInMainHand().getType() == Material.FEATHER){
 			if(!runnable2.containsKey(player.getName())) {
-				TestClass2 runnable2 = new TestClass2(player.getLocation());
+				TestClass2 runnable2 = new TestClass2(player.getLocation(), 20, 4);
 				runnable2.start();
 				this.runnable2.put(player.getName(), runnable2);
 			} else this.runnable2.remove(player.getName()).cancel();
-		} else if(player.getInventory().getItemInMainHand().getType() == Material.BLAZE_ROD) {
+		} else if (player.getInventory().getItemInMainHand().getType() == Material.NETHER_STAR) { 
+			if(!runnable2.containsKey(player.getName())) {
+				TestClass3 runnable2 = new TestClass3(player.getLocation());
+				runnable2.start();
+				this.runnable2.put(player.getName(), runnable2);
+			} else this.runnable2.remove(player.getName()).cancel();
+		} else if (player.getInventory().getItemInMainHand().getType() == Material.BLAZE_ROD) {
 			if(running)
 				return;
 			running = true;
@@ -74,7 +80,7 @@ public class Test2 implements Listener {
 				if(count >= 10)
 					return;
 				count++;
-				TestClass thread = new TestClass(entity.getLocation(), 5);
+				TestClass2 thread = new TestClass2(entity.getLocation(), 30, 2);
 				thread.start();
 				BukkitRunnable runnable = new BukkitRunnable() {
 					@Override
@@ -83,10 +89,10 @@ public class Test2 implements Listener {
 						BukkitRunnable runnable2 = new BukkitRunnable() {
 							@Override
 							public void run() {
-								entity.getWorld().createExplosion(entity.getLocation().getX(), 
-										entity.getLocation().getY(), 
-										entity.getLocation().getZ(), 
-										5, false, false);
+								for(double radius = 0.0; radius <= 30; radius+=0.1) {
+									Polar_coodinates pc = new Polar_coodinates(player.getLocation().getWorld(), radius, Math.toRadians(-entity.getLocation().getYaw()), 0);
+									sendReddust(entity.getEyeLocation().clone().add(pc.convertLocation()).add(0, -0.5, 0), new DetailsColor("#2b0060"), true, 20);
+								}
 								running = false;
 							}
 						};
@@ -140,23 +146,59 @@ public class Test2 implements Listener {
 		}
 	}
 	
-	public static void damageparticle(Location particleloc, Entity entity) {
+	//////////////////////////////////////////////////////////////////////////////
+	protected void sendReddust(Location center, DetailsColor color, boolean damage, double damageparam) {
+		sendParticle(EnumParticle.REDSTONE, center, color.getRed(), color.getGreen(), color.getBlue(), damage, damageparam);
+	}
+	
+	protected void sendParticle(EnumParticle param1, Location param2, float param3, float param4, float param5, boolean param6, double param7) {
+		Bukkit.getOnlinePlayers().stream().filter(player -> param2.getWorld().getName().equals(player.getLocation().getWorld().getName()))
+		.forEach(player -> {
+			if(param6) setDamageParticle(param2, param7);
+			new ParticleAPI.Particle(param1, 
+					param2, 
+					param3, 
+					param4, 
+					param5, 
+					1, 
+					0).sendParticle(player);
+		});
+	}
+	
+	protected void setDamageParticle(Location particleloc, double damage) {
+		AxisAlignedBB aabb = new AxisAlignedBB(particleloc.getX()+0.05, particleloc.getY()-0.05, particleloc.getZ()-0.05, particleloc.getX()+0.05, particleloc.getY()+0.05, particleloc.getZ()+0.05);
+		particleloc.getWorld().getEntities().forEach(entity -> {
+			Location entityloc = entity.getLocation();
+			boolean a = aabb.a(entityloc.getX()-0.4, entityloc.getY()-0.0, entityloc.getZ()-0.4, entityloc.getX()+0.4, entityloc.getY()+1.8, entityloc.getZ()+0.4);
+			if(a) syncDamage(damage, entity);
+		});
+	}
+	
+	protected void syncDamage(double damage, Entity entity) {
 		if(entity == null || !(entity instanceof LivingEntity))
 			return;
 		LivingEntity livingentity = (LivingEntity)entity;
-		AxisAlignedBB aabb = new AxisAlignedBB(particleloc.getX()+0.01, particleloc.getY()-0.01, particleloc.getZ()-0.01, particleloc.getX()+0.01, particleloc.getY()+0.01, particleloc.getZ()+0.01);
-		Location entityloc = entity.getLocation();
-		boolean a = aabb.a(entityloc.getX()-0.4, entityloc.getY()-0.0, entityloc.getZ()-0.4, entityloc.getX()+0.4, entityloc.getY()+1.7, entityloc.getZ()+0.4);
-		if(a) {
-			BukkitRunnable runnable = new BukkitRunnable() {
-				@Override
-				public void run() {
-					livingentity.damage(10.0);
+		(new BukkitRunnable() {
+			@Override
+			public void run() {
+				double damage2 = damage;
+				switch(entity.getWorld().getDifficulty()) {
+				case EASY:
+					damage2 *= 2;
+					break;
+				case HARD:
+					damage2 *= 0.5;
+					break;
+				case NORMAL:
+					break;
+				default:
+					return;
 				}
-			};
-			runnable.runTask(Main.instance);
-		}
+				livingentity.damage(damage2);
+			}
+		}).runTask(Main.instance);
 	}
+	//////////////////////////////////////////////////////////////////////////////
 	
 	private class TestClass extends ThreadBase {
 		
@@ -183,7 +225,7 @@ public class Test2 implements Listener {
 								color2.getBlue(),
 								Bukkit.getOnlinePlayers());
 					}
-					Thread.sleep(10);
+					sleep(10);
 				}
 				while(run) {
 					if(radius_ >= radius) {
@@ -216,46 +258,92 @@ public class Test2 implements Listener {
 
 		private Location corner;
 		private int move;
-		private DetailsColor color = new DetailsColor("#ff5000");
+		private int maxradius;
+		private int maxwidth;
+		private DetailsColor color = new DetailsColor("#ff7000");
 		private DetailsColor color2 = new DetailsColor("#ff3000");
 		
-		public TestClass2(Location corner) {
+		public TestClass2(Location corner, int radius, int width) {
 			this.corner = corner;
+			this.maxradius = radius*5;
+			this.maxwidth = width*5;
 		}
 		
 		@Override
 		public void run() {
 			while(run) {
 				try {
-					Thread.sleep(10);
+					sleep(10);
 				} catch (InterruptedException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
-				if(move >= 100)
+				if(move >= maxradius*2)
 					move = 0;
-				for(int x = 0; x <= 30; x+=2) {
-					for(int z = 0; z <= 100; z+=2) {
-						if((x==0.0 || z==0.0)||(x==30||z==100))
-							Main.sendPlayersParticle(EnumParticle.REDSTONE, 
-									corner.clone().add(x*0.2,0,z*0.2), 
-									color2.getRed(), 
-									color2.getGreen(), 
-									color2.getBlue(),
-									Bukkit.getOnlinePlayers());
+				for(int radius = 0; radius <= maxradius; radius+=2) {
+					for(int width = -(maxwidth/2); width <= (maxwidth/2); width+=2) {
+						if((radius != 0 && radius != maxradius) && (width != -(maxwidth/2) && width != (maxwidth/2)))
+							continue;
+						Location loc = corner.clone()
+								.add(new Polar_coodinates(corner.getWorld(), radius*0.2, Math.toRadians(-corner.getYaw()), 0).convertLocation())
+								.add(new Polar_coodinates(corner.getWorld(), width*0.2, Math.toRadians(-(corner.getYaw()-90)), 0).convertLocation());
+						Main.sendPlayersParticle(EnumParticle.REDSTONE, 
+								loc, 
+								color2.getRed(), 
+								color2.getGreen(), 
+								color2.getBlue(),
+								Bukkit.getOnlinePlayers());
 					}
 				}
-				for(int movewidth = 0; movewidth <= 60; movewidth++) {
-					Location corner2 = corner.clone().add(movewidth*0.1,0,move*0.2);
-					corner.getWorld().getEntities().forEach(entity -> damageparticle(corner2, entity));
+				for(int width = -(maxwidth/2)*2; width <= (maxwidth/2)*2; width+=2) {
+					Location loc = corner.clone()
+							.add(new Polar_coodinates(corner.getWorld(), move*0.1, Math.toRadians(-corner.getYaw()), 0).convertLocation())
+							.add(new Polar_coodinates(corner.getWorld(), width*0.1, Math.toRadians(-(corner.getYaw()-90)), 0).convertLocation());
 					Main.sendPlayersParticle(EnumParticle.REDSTONE, 
-							corner2, 
+							loc, 
 							color.getRed(), 
 							color.getGreen(), 
 							color.getBlue(),
 							Bukkit.getOnlinePlayers());
 				}
 				move+=1;
+			}
+		}
+	}
+	
+	private class TestClass3 extends ThreadBase {
+		
+		private Location center;
+		private int expantiontick = 5;
+		
+		public TestClass3(Location center) {
+			this.center = center;
+		}
+		
+		@Override
+		public void run() {
+			try {
+				Expansion();
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		}
+		
+		public void Expansion() throws InterruptedException {
+			for(double theta = 0.0; theta <= 2*Math.PI; theta += Math.PI/360) {
+				for(double y = 0; y <= 5; y+=0.5) {
+					Polar_coodinates pc = new Polar_coodinates(center.getWorld(), 20, theta, 0);
+					Main.sendPlayersParticle(EnumParticle.FLAME, 
+							center.clone().add(pc.convertLocation()).add(0, y, 0), 
+							0, 0, 0,
+							Bukkit.getOnlinePlayers());
+					pc = new Polar_coodinates(center.getWorld(), 20, -theta, 0);
+					Main.sendPlayersParticle(EnumParticle.FLAME, 
+							center.clone().add(pc.convertLocation()).add(0, y, 0), 
+							0, 0, 0,
+							Bukkit.getOnlinePlayers());
+					
+				}
+				sleep(expantiontick);
 			}
 		}
 	}

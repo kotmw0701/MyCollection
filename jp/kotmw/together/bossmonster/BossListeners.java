@@ -74,6 +74,8 @@ public class BossListeners implements Listener{
 	
 	@EventHandler
 	public void onDeath(PlayerDeathEvent e) {
+		if(Main.instance.boss == null || Main.instance.boss.getBoss().isDead())
+			return;
 		Player player = e.getEntity();
 		if(!Main.instance.boss.isChallenger(player))
 			return;
@@ -82,6 +84,8 @@ public class BossListeners implements Listener{
 	
 	@EventHandler
 	public void onTeleport(PlayerTeleportEvent e) {
+		if(Main.instance.boss == null || Main.instance.boss.getBoss().isDead())
+			return;
 		Player player = e.getPlayer();
 		if(!Main.instance.boss.isChallenger(player))
 			return;

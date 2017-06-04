@@ -2,27 +2,38 @@ package jp.kotmw.together.bossmonster;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
+import org.bukkit.attribute.Attribute;
+import org.bukkit.attribute.AttributeInstance;
+import org.bukkit.attribute.AttributeModifier;
+import org.bukkit.attribute.AttributeModifier.Operation;
 import org.bukkit.entity.Creature;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
+import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Listener;
 import org.bukkit.scheduler.BukkitRunnable;
 
 import jp.kotmw.together.Main;
+import jp.kotmw.together.bossmonster.skills.FocusAttack;
 import jp.kotmw.together.bossmonster.skills.Instant_Death;
+import jp.kotmw.together.bossmonster.skills.RotationAttack;
 import jp.kotmw.together.bossmonster.skills.SkillBase;
+import jp.kotmw.together.bossmonster.skills.TargetBeam;
+import jp.kotmw.together.util.Title;
 
 public class Boss extends BukkitRunnable implements Listener{
 
-	private  double maxbosshelth = 1000;
+	private double maxbosshelth = 1000;
 	private List<String> challengers = new ArrayList<>();
 	private List<String> prioritychallengers = new ArrayList<>();
 	private Map<String, Double> hate = new HashMap<>();
@@ -30,6 +41,7 @@ public class Boss extends BukkitRunnable implements Listener{
 	private Creature boss;
 	private Location center;
 	private SkillBase skill;
+	private Pattern pattern = Pattern.a;
 	private int tick = (20*60)*20+3*20;//20分？+3秒
 	private int timecount;
 	private int togglesecond = 10;
@@ -45,9 +57,16 @@ public class Boss extends BukkitRunnable implements Listener{
 			maxbosshelth = 2000;
 		boss = (Creature) loc.getWorld().spawnEntity(loc, EntityType.ZOMBIE);
 		boss.setAI(false);
+		boss.setCustomName("██████████");
+		boss.setCustomNameVisible(true);
 		boss.setMaxHealth(maxbosshelth);
 		boss.setHealth(maxbosshelth);
 		boss.setRemoveWhenFarAway(false);
+		LivingEntity lentity = boss;
+		AttributeInstance gkr = lentity.getAttribute(Attribute.GENERIC_KNOCKBACK_RESISTANCE);
+		AttributeInstance gad = lentity.getAttribute(Attribute.GENERIC_ATTACK_DAMAGE);
+		gkr.addModifier(new AttributeModifier("generic.knockbackResistance", 1.0, Operation.ADD_NUMBER));
+		gad.addModifier(new AttributeModifier("generic.attackDamage", getDiffDamage(10.0), Operation.ADD_NUMBER));
 		sendChallengersMessage(ChatColor.GREEN+"概要: "+ChatColor.GOLD+"あなた達はボスの対戦者として設定されました、ボスを倒す、若しくは、死ぬまでここからは出られません");
 		if(Main.bossdebug) {
 			sendChallengersMessage("デバッグモードが有効になっています");
@@ -77,10 +96,13 @@ public class Boss extends BukkitRunnable implements Listener{
 			return;
 		}
 		if(tick > 20*3) {
+			if(pattern.equals(Pattern.a) && ((boss.getHealth()/boss.getMaxHealth())*10 <= 8 )) pattern = Pattern.b;
+			else if(pattern.equals(Pattern.b) && ((boss.getHealth()/boss.getMaxHealth())*10 <= 5)) pattern = Pattern.c;
+			else if(pattern.equals(Pattern.c) && ((boss.getHealth()/boss.getMaxHealth())*10 <= 2)) pattern = Pattern.d;
 			if(tick%20 == 0) {
 				if(timecount%2 == 0) {
 					if(skill == null || !skill.isRunning()) {
-						/*Random random = new Random();
+						Random random = new Random();
 						if(!prioritychallengers.isEmpty())
 							resetPriorityChallenger();
 						switch(random.nextInt(10)) {
@@ -90,12 +112,16 @@ public class Boss extends BukkitRunnable implements Listener{
 						case 1:
 							skill = new FocusAttack(this);
 							break;
-						}*/
+						case 2:
+							skill = new TargetBeam(this);
+							break;
+						}
 					}
 				}
 				if(timecount >= togglesecond) {
 					timecount = 0;
 					settingPlayerHate();
+					boss.setTarget(getHatePlayer(1));
 				}
 				timecount++;
 			}
@@ -116,6 +142,10 @@ public class Boss extends BukkitRunnable implements Listener{
 	
 	public void sendChallengersMessage(String msg) {
 		challengers.forEach(player -> Bukkit.getPlayer(player).sendMessage(BOSS_PREFIX+msg));
+	}
+	
+	public void sendChallengersTitle(int fadein, int stay, int fadeout, String main, String sub) {
+		challengers.forEach(player -> Title.sendTitle(Bukkit.getPlayer(player), fadein, stay, fadeout, main, sub));
 	}
 	
 	public boolean isStarted() {
@@ -148,6 +178,10 @@ public class Boss extends BukkitRunnable implements Listener{
 		return boss;
 	}
 	
+	public Pattern getPattern() {
+		return pattern;
+	}
+	
 	public void setPlayerTurn(boolean playerturn) {
 		this.playerturn = playerturn;
 	}
@@ -177,6 +211,30 @@ public class Boss extends BukkitRunnable implements Listener{
 		return null;
 	}
 	
+	public Player getHatePlayer(int num) {
+		List<String> sorted = new ArrayList<>();
+		hate.entrySet().stream()
+		.sorted(Collections.reverseOrder(Map.Entry.comparingByValue()))
+		.forEach(hates -> sorted.add(hates.getKey()));
+		return Bukkit.getPlayer(sorted.get(num-1));
+	}
+	
+	public double getDiffDamage(double basedamage) {
+		switch(boss.getWorld().getDifficulty()) {
+		case EASY:
+			basedamage *= 2;
+			break;
+		case HARD:
+			basedamage *= 0.5;
+			break;
+		case NORMAL:
+			break;
+		default:
+			break;
+		}
+		return basedamage;
+	}
+	
 	public void leavePlayer(String player) {
 		challengers.remove(player);
 		prioritychallengers.remove(player);
@@ -200,6 +258,10 @@ public class Boss extends BukkitRunnable implements Listener{
 			hate.entrySet().forEach(data -> sendChallengersMessage(data.getKey()+" : "+data.getValue()));
 		}
 		dps.clear();
+	}
+	
+	private enum Pattern {
+		a,b,c,d,z;
 	}
 	
 	/*
