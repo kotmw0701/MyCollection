@@ -36,6 +36,7 @@ import com.sk89q.worldedit.bukkit.selections.Selection;
 
 import jp.kotmw.together.bossmonster.Boss;
 import jp.kotmw.together.bossmonster.BossListeners;
+import jp.kotmw.together.bossmonster.Boss_Exception;
 import jp.kotmw.together.getvisibleplayer.Test1;
 import jp.kotmw.together.test2.Polar_coodinates;
 import jp.kotmw.together.test2.Test2;
@@ -130,8 +131,16 @@ public class Main extends JavaPlugin implements Listener {
 					p.sendMessage("[BossSystem] デバッグモードを"+!bossdebug+"に変更しました");
 					bossdebug = !bossdebug;
 					return true;
-				} else if((args.length == 1) && ("boss_ai").equalsIgnoreCase(args[0])) {
-					Main.instance.boss.getBoss().setAI(true);
+				} else if((args.length == 1) && ("boss_exception").equalsIgnoreCase(args[0])){
+					if(Main.instance.boss == null) {
+						p.sendMessage("ボスが設置されていません");
+						return false;
+					}
+					new Boss_Exception(Main.instance.boss).start();
+				} else if((args.length == 4) && ("setshield".equalsIgnoreCase(args[0]))) {
+					Test2.x = Integer.valueOf(args[1]).intValue();
+					Test2.y = Integer.valueOf(args[2]).intValue();
+					Test2.z = Integer.valueOf(args[3]).intValue();
 				} else if((args.length == 1) && ("stop".equalsIgnoreCase(args[0]))) {
 					if(p.hasMetadata(Collectmovemeta))
 						p.removeMetadata(Collectmovemeta, this);

@@ -25,7 +25,7 @@ public class TargetBeam extends SkillBase {
 		bsr = new BossAttackRange_Rectangle(boss, boss.getBoss().getLocation(), 30, 4, theta);
 		bsr.start();
 		setBSR(bsr);
-		runDelay(20*3);
+		runDelay((int) (20.0*1.5));
 	}
 
 	@Override

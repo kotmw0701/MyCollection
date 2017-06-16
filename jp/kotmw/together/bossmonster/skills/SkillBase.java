@@ -112,7 +112,6 @@ public abstract class SkillBase extends Thread {
 		running = false;
 		boss.setPlayerTurn(true);
 		boss.getBoss().setAI(true);
-		boss.resetPriorityChallenger();
 	}
 	
 	public boolean isRunning() {

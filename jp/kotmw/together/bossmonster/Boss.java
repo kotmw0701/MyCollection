@@ -7,20 +7,28 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.UUID;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.attribute.AttributeModifier.Operation;
+import org.bukkit.boss.BarColor;
+import org.bukkit.boss.BarFlag;
+import org.bukkit.boss.BarStyle;
+import org.bukkit.boss.BossBar;
 import org.bukkit.entity.Creature;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.Zombie;
 import org.bukkit.event.Listener;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitRunnable;
 
 import jp.kotmw.together.Main;
@@ -34,14 +42,18 @@ import jp.kotmw.together.util.Title;
 public class Boss extends BukkitRunnable implements Listener{
 
 	private double maxbosshelth = 1000;
-	private List<String> challengers = new ArrayList<>();
-	private List<String> prioritychallengers = new ArrayList<>();
-	private Map<String, Double> hate = new HashMap<>();
-	private Map<String, Double> dps = new HashMap<>();
+	private List<UUID> challengers = new ArrayList<>();
+	@SuppressWarnings("unused")
+	private List<UUID> ancestors = new ArrayList<>();
+	private Map<UUID, Double> hate = new HashMap<>();
+	private Map<UUID, Double> dps = new HashMap<>();
 	private Creature boss;
+	private BossBar bossbar;
 	private Location center;
 	private SkillBase skill;
+	private Shield shield;
 	private Pattern pattern = Pattern.a;
+	private int level = 1;
 	private int tick = (20*60)*20+3*20;//20分？+3秒
 	private int timecount;
 	private int togglesecond = 10;
@@ -51,17 +63,23 @@ public class Boss extends BukkitRunnable implements Listener{
 	
 	public Boss(Location loc) {
 		this.center = loc;
-		Bukkit.getOnlinePlayers().stream().filter(player -> (loc.distance(player.getLocation()) <= 20)).forEach(player -> challengers.add(player.getName()));
+		//resetShield();
+		bossbar = Bukkit.createBossBar(ChatColor.BOLD+"MBoss", BarColor.GREEN, BarStyle.SEGMENTED_20, BarFlag.DARKEN_SKY);
+		Bukkit.getOnlinePlayers().stream().filter(player -> (loc.distance(player.getLocation()) <= 20)).forEach(player -> {
+			challengers.add(player.getUniqueId());
+			bossbar.addPlayer(player);
+		});
 		maxbosshelth += (challengers.size()-1)*100;
 		if(maxbosshelth >= 2000)
 			maxbosshelth = 2000;
 		boss = (Creature) loc.getWorld().spawnEntity(loc, EntityType.ZOMBIE);
 		boss.setAI(false);
-		boss.setCustomName("██████████");
-		boss.setCustomNameVisible(true);
 		boss.setMaxHealth(maxbosshelth);
 		boss.setHealth(maxbosshelth);
 		boss.setRemoveWhenFarAway(false);
+		boss.getEquipment().setHelmet(new ItemStack(Material.LEATHER_HELMET));
+		Zombie zombie = (Zombie) boss;
+		zombie.setBaby(false);
 		LivingEntity lentity = boss;
 		AttributeInstance gkr = lentity.getAttribute(Attribute.GENERIC_KNOCKBACK_RESISTANCE);
 		AttributeInstance gad = lentity.getAttribute(Attribute.GENERIC_ATTACK_DAMAGE);
@@ -70,7 +88,7 @@ public class Boss extends BukkitRunnable implements Listener{
 		sendChallengersMessage(ChatColor.GREEN+"概要: "+ChatColor.GOLD+"あなた達はボスの対戦者として設定されました、ボスを倒す、若しくは、死ぬまでここからは出られません");
 		if(Main.bossdebug) {
 			sendChallengersMessage("デバッグモードが有効になっています");
-			challengers.forEach(player -> sendChallengersMessage(player));
+			challengers.forEach(player -> sendChallengersMessage(Bukkit.getPlayer(player).getName()));
 		}
 	}
 	
@@ -78,14 +96,35 @@ public class Boss extends BukkitRunnable implements Listener{
 		if(challengers.isEmpty())
 			throw new NullPointerException("参加者が存在していません (  ´∀｀)＜ぬるぽ");
 		challengers.forEach(player -> hate.put(player, 0.0));
+		/*Boss_Exception be = new Boss_Exception(this);
+		if(be.checkException()) {
+			be.start();
+			return;
+		}*/
 		this.isstarted = true;
 		boss.setAI(true);
 		sendChallengersMessage("戦闘開始");
 		this.runTaskTimer(Main.instance, 0, 1);
 	}
 	
+	public void restart() {
+		this.isstarted = true;
+		boss.setAI(true);
+		sendChallengersMessage("戦闘開始");
+		this.runTaskTimer(Main.instance, 0, 1);
+	}
+	
+	public void exceptionstart() {
+		this.isstarted = true;
+		boss.setAI(true);
+		sendChallengersMessage(ChatColor.RED+"修正不可能なため、強制的に戦闘を開始します、対象を殲滅してください");
+		this.runTaskTimer(Main.instance, 0, 1);
+		
+	}
+	
 	public void kill() {
 		boss.remove();
+		if(!isstarted) getchallengers().forEach(player -> bossbar.removeAll());
 	}
 
 	@Override
@@ -93,9 +132,11 @@ public class Boss extends BukkitRunnable implements Listener{
 		if(boss.isDead()) {
 			this.cancel();
 			sendChallengersMessage("討伐成功！");
+			getchallengers().forEach(player -> bossbar.removeAll());
 			return;
 		}
 		if(tick > 20*3) {
+			updateHPGauge();
 			if(pattern.equals(Pattern.a) && ((boss.getHealth()/boss.getMaxHealth())*10 <= 8 )) pattern = Pattern.b;
 			else if(pattern.equals(Pattern.b) && ((boss.getHealth()/boss.getMaxHealth())*10 <= 5)) pattern = Pattern.c;
 			else if(pattern.equals(Pattern.c) && ((boss.getHealth()/boss.getMaxHealth())*10 <= 2)) pattern = Pattern.d;
@@ -103,8 +144,6 @@ public class Boss extends BukkitRunnable implements Listener{
 				if(timecount%2 == 0) {
 					if(skill == null || !skill.isRunning()) {
 						Random random = new Random();
-						if(!prioritychallengers.isEmpty())
-							resetPriorityChallenger();
 						switch(random.nextInt(10)) {
 						case 0:
 							skill = new RotationAttack(this);
@@ -140,6 +179,10 @@ public class Boss extends BukkitRunnable implements Listener{
 		tick--;
 	}
 	
+	public void sendChallengersText(String text) {
+		challengers.forEach(player -> Bukkit.getPlayer(player).sendMessage(text));
+	}
+	
 	public void sendChallengersMessage(String msg) {
 		challengers.forEach(player -> Bukkit.getPlayer(player).sendMessage(BOSS_PREFIX+msg));
 	}
@@ -157,7 +200,7 @@ public class Boss extends BukkitRunnable implements Listener{
 	}
 	
 	public boolean isChallenger(Player player) {
-		return challengers.contains(player.getName());
+		return challengers.contains(player.getUniqueId());
 	}
 	
 	public boolean isBoss(Entity entity) {
@@ -182,21 +225,24 @@ public class Boss extends BukkitRunnable implements Listener{
 		return pattern;
 	}
 	
+	public int getLevel() {
+		return level;
+	}
+	
 	public void setPlayerTurn(boolean playerturn) {
 		this.playerturn = playerturn;
+		if(!playerturn) {
+			Shield shield = new Shield(this, 5);
+			shield.runTaskTimer(Main.instance, 0, 1);
+			this.shield = shield;
+		} else {
+			if(shield == null)
+				return;
+			shield.cancel();
+		}
 	}
 	
-	public void setPrioritychallenger(String player) {
-		if(challengers.remove(player))
-			prioritychallengers.add(player);
-	}
-	
-	public void resetPriorityChallenger() {
-		challengers.addAll(prioritychallengers);
-		prioritychallengers.clear();
-	}
-	
-	public void addDamage(String player, double damage) {
+	public void addDamage(UUID player, double damage) {
 		if(!dps.containsKey(player)) {
 			dps.put(player, damage);
 			return;
@@ -204,15 +250,8 @@ public class Boss extends BukkitRunnable implements Listener{
 		dps.put(player, dps.get(player)+damage);
 	}
 	
-	public String getHPBar(double health) {
-		@SuppressWarnings("unused")
-		String base = "||||||||||";
-		
-		return null;
-	}
-	
 	public Player getHatePlayer(int num) {
-		List<String> sorted = new ArrayList<>();
+		List<UUID> sorted = new ArrayList<>();
 		hate.entrySet().stream()
 		.sorted(Collections.reverseOrder(Map.Entry.comparingByValue()))
 		.forEach(hates -> sorted.add(hates.getKey()));
@@ -236,13 +275,14 @@ public class Boss extends BukkitRunnable implements Listener{
 	}
 	
 	public void leavePlayer(String player) {
+		bossbar.removePlayer(Bukkit.getPlayer(player));
 		challengers.remove(player);
-		prioritychallengers.remove(player);
 		hate.remove(player);
 		dps.remove(player);
 		if(challengers.size() < 1) {
 			this.cancel();
 			boss.remove();
+			bossbar.removeAll();
 		}
 	}
 	
@@ -260,8 +300,39 @@ public class Boss extends BukkitRunnable implements Listener{
 		dps.clear();
 	}
 	
-	private enum Pattern {
-		a,b,c,d,z;
+	/*
+	 * a 100%
+	 * b 80%
+	 * c 50%
+	 * d 20%
+	 */
+	public enum Pattern {
+		a,b,c,d,Exception;
+	}
+	
+	public void updateHPGauge() {
+		double progless = boss.getHealth() / boss.getMaxHealth();
+		bossbar.setProgress(progless);
+		switch(pattern) {
+		case c:
+			bossbar.setColor(BarColor.YELLOW);
+			break;
+		case d:
+			bossbar.setColor(BarColor.RED);
+			break;
+		default:
+			break;
+		}
+	}
+	
+	@SuppressWarnings("unused")
+	private void resetShield() {
+		Bukkit.getWorlds().forEach(world ->{
+			world.getEntities().stream()
+			.filter(entity -> entity.getType() == EntityType.ARMOR_STAND)
+			.filter(entity -> entity.getCustomName().equalsIgnoreCase("BossShield"))
+			.forEach(entity -> entity.remove());
+		});
 	}
 	
 	/*
@@ -275,5 +346,13 @@ public class Boss extends BukkitRunnable implements Listener{
 	・プレイヤーが全滅した場合は、ボス自動消滅
 	・制限時間に討伐できない場合は、広範囲即死攻撃
 	・戦闘開始後は外からの干渉は不可能(強制的に触れようとした場合は即死)
+	 */
+	
+	/*
+	 * 石を持ち上げてくるくる回してからプレイヤーに飛ばす
+	 * 
+	 * 
+	 * 
+	 * 
 	 */
 }

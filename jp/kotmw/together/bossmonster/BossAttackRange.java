@@ -1,5 +1,8 @@
 package jp.kotmw.together.bossmonster;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.bukkit.Location;
 
 import jp.kotmw.together.util.DetailsColor;
@@ -10,9 +13,16 @@ public abstract class BossAttackRange extends Thread {
 	
 	protected Boss boss;
 	protected boolean cancel = false;
+	protected List<Location> centers = new ArrayList<>();
 	
-	public BossAttackRange(Boss boss) {
+	public BossAttackRange(Boss boss, Location center) {
 		this.boss = boss;
+		this.centers.add(center);
+	}
+	
+	public BossAttackRange(Boss boss, List<Location> centers) {
+		this.boss = boss;
+		this.centers.addAll(centers);
 	}
 	
 	@Override

@@ -16,7 +16,7 @@ import org.bukkit.util.Vector;
 
 import jp.kotmw.together.Main;
 
-public class BossListeners implements Listener{
+public class BossListeners implements Listener {
 	
 	@EventHandler
 	public void onDamagebyEntity(EntityDamageByEntityEvent e) {
@@ -37,22 +37,35 @@ public class BossListeners implements Listener{
 		if(!Main.instance.boss.isStarted()) {
 			player.sendMessage(Boss.BOSS_PREFIX+ChatColor.RED+"戦闘が開始されてないので攻撃は不可能です");
 			player.playSound(player.getLocation(), Sound.BLOCK_ANVIL_LAND, 1, 1);
-			Vector vec = new Vector(-1*player.getLocation().getDirection().getX(), -0.8*player.getLocation().getDirection().getY(), -1*player.getLocation().getDirection().getZ());
+			Vector vec = new Vector(-2*player.getLocation().getDirection().getX(), -0.8*player.getLocation().getDirection().getY(), -2*player.getLocation().getDirection().getZ());
 			player.setVelocity(vec);
-			player.damage(3);
 			e.setCancelled(true);
 			return;
 		}
 		if(!Main.instance.boss.isPlayerturn()) {
 			player.playSound(player.getLocation(), Sound.BLOCK_ANVIL_LAND, 1, 1);
-			Vector vec = new Vector(-1*player.getLocation().getDirection().getX(), -0.8*player.getLocation().getDirection().getY(), -1*player.getLocation().getDirection().getZ());
-			player.setVelocity(vec);
-			player.damage(3);
+			/*double knockback = 1.0;
+			switch(Main.instance.boss.getPattern()) {
+			case b:
+				knockback = 1.5;
+				break;
+			case c:
+				knockback = 2.0;
+				break;
+			case d:
+				knockback = 3.0;
+				break;
+			default:
+				break;
+			
+			}
+			Vector vec = new Vector(-knockback*player.getLocation().getDirection().getX(), -0.8*player.getLocation().getDirection().getY(), -knockback*player.getLocation().getDirection().getZ());
+			player.setVelocity(vec);*/
 			e.setCancelled(true);
 			return;
 		}
 		e.setDamage(e.getDamage()/5);
-		Main.instance.boss.addDamage(player.getName(), e.getDamage());
+		Main.instance.boss.addDamage(player.getUniqueId(), e.getDamage());
 	}
 	
 	@EventHandler
@@ -65,6 +78,11 @@ public class BossListeners implements Listener{
 			e.setCancelled(true);
 			return;
 		}
+		if(!Main.instance.boss.isPlayerturn()) {
+			e.setCancelled(true);
+			return;
+		}
+		
 		DamageCause cause = e.getCause();
 		if(cause.equals(DamageCause.ENTITY_ATTACK) 
 				|| cause.equals(DamageCause.FIRE_TICK))
@@ -79,7 +97,7 @@ public class BossListeners implements Listener{
 		Player player = e.getEntity();
 		if(!Main.instance.boss.isChallenger(player))
 			return;
-		Main.instance.boss.setPrioritychallenger(player.getName());
+		Main.instance.boss.leavePlayer(player.getName());
 	}
 	
 	@EventHandler
@@ -91,7 +109,7 @@ public class BossListeners implements Listener{
 			return;
 		if(e.getFrom().getWorld() == e.getTo().getWorld())
 			return;
-		Main.instance.boss.setPrioritychallenger(player.getName());
+		Main.instance.boss.leavePlayer(player.getName());
 	}
 	
 	@EventHandler

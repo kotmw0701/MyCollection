@@ -16,7 +16,9 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.util.EulerAngle;
 
 import jp.kotmw.together.Main;
 import jp.kotmw.together.util.DetailsColor;
@@ -27,6 +29,9 @@ import net.minecraft.server.v1_10_R1.AxisAlignedBB;
 
 public class Test2 implements Listener {
 	
+	public static double theta, phi;
+	public static boolean circle;
+	public static int x,y,z;
 	Map<String, BukkitRunnable> runnable = new HashMap<>();
 	Map<String, ThreadBase> runnable2 = new HashMap<>();
 	boolean running = false;
@@ -62,12 +67,22 @@ public class Test2 implements Listener {
 				runnable2.start();
 				this.runnable2.put(player.getName(), runnable2);
 			} else this.runnable2.remove(player.getName()).cancel();
+		} else if (player.getInventory().getItemInMainHand().getType() == Material.BOOK) {
+			if(!player.getInventory().getItemInMainHand().getItemMeta().getDisplayName().equals("Boss"))
+				return;
+			player.teleport(new Location(player.getWorld(), 2081.5, 250.5, -751.5));
 		} else if (player.getInventory().getItemInMainHand().getType() == Material.NETHER_STAR) { 
 			if(!runnable2.containsKey(player.getName())) {
 				TestClass3 runnable2 = new TestClass3(player.getLocation());
 				runnable2.start();
 				this.runnable2.put(player.getName(), runnable2);
 			} else this.runnable2.remove(player.getName()).cancel();
+		} else if (player.getInventory().getItemInMainHand().getType() == Material.SHIELD) {
+			ArmorStand stand = (ArmorStand) player.getWorld().spawnEntity(player.getLocation(), EntityType.ARMOR_STAND);
+			stand.setArms(true);
+			stand.setSmall(true);
+			stand.getEquipment().setItemInMainHand(new ItemStack(Material.SHIELD));
+			stand.setRightArmPose(new EulerAngle(Math.toRadians(x), Math.toRadians(y), Math.toRadians(z)));
 		} else if (player.getInventory().getItemInMainHand().getType() == Material.BLAZE_ROD) {
 			if(running)
 				return;
