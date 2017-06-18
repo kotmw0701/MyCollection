@@ -18,6 +18,7 @@ public class Shield extends BukkitRunnable {
 
 	private Boss boss;
 	private double theta;
+	private boolean run = false;
 	private List<ArmorStand> stands = new ArrayList<>();
 	
 	/*
@@ -46,6 +47,8 @@ public class Shield extends BukkitRunnable {
 	
 	@Override
 	public void run() {
+		if(run == false)
+			run = true;
 		if(theta >= 2*Math.PI)
 			theta = 0;
 		Polar_coodinates pc;
@@ -58,9 +61,18 @@ public class Shield extends BukkitRunnable {
 		theta += Math.PI/120;
 	}
 	
+	public List<ArmorStand> getShieldStands() {
+		return stands;
+	}
+	
+	public boolean isRunning() { 
+		return run;
+	}
+	
 	@Override
 	public synchronized void cancel() throws IllegalStateException {
 		Bukkit.getScheduler().cancelTask(getTaskId());
 		stands.forEach(stand -> stand.remove());
+		run = false;
 	}
 }

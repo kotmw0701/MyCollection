@@ -33,11 +33,6 @@ public class BossAttackRange_Rectangle extends BossAttackRange {
 	@Override
 	public void run() {
 		while(!boss.getBoss().isDead() && !cancel) {
-			try {
-				Thread.sleep(10);
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
 			if(move >= maxradius*2)
 				move = 0;
 			for(int radius = 0; radius <= maxradius; radius+=2) {
@@ -61,6 +56,11 @@ public class BossAttackRange_Rectangle extends BossAttackRange {
 				}
 			}
 			move+=1;
+			try {
+				Thread.sleep(10);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
 		}
 	}
 	

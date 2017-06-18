@@ -37,13 +37,12 @@ import com.sk89q.worldedit.bukkit.selections.Selection;
 import jp.kotmw.together.bossmonster.Boss;
 import jp.kotmw.together.bossmonster.BossListeners;
 import jp.kotmw.together.bossmonster.Boss_Exception;
+import jp.kotmw.together.bossmonster.skills.PowerUpAncestors;
 import jp.kotmw.together.getvisibleplayer.Test1;
-import jp.kotmw.together.test2.Polar_coodinates;
 import jp.kotmw.together.test2.Test2;
-import jp.kotmw.together.util.DetailsColor;
-import jp.kotmw.together.util.DetailsColor.DetailsColorType;
 import jp.kotmw.together.util.ParticleAPI;
 import jp.kotmw.together.util.ParticleAPI.EnumParticle;
+import jp.kotmw.together.util.Title;
 
 public class Main extends JavaPlugin implements Listener {
 
@@ -90,9 +89,11 @@ public class Main extends JavaPlugin implements Listener {
 				if((args.length == 1) && ("place".equalsIgnoreCase(args[0]))) {
 					p.setMetadata(Collectmovemeta, new FixedMetadataValue(this, p.getName()));
 				} else if((args.length == 1) && ("boss_spawn".equalsIgnoreCase(args[0]))) {
+					if(Main.instance.boss != null && Main.instance.boss.isStarted())
+						return false;
 					if(Main.instance.boss != null && !Main.instance.boss.getBoss().isDead())
 						Main.instance.boss.getBoss().remove();
-					Main.instance.boss = new Boss(p.getLocation());
+					Main.instance.boss = new Boss(p.getLocation(), "TestBoss");
 				} else if((args.length == 1) && ("boss_start".equalsIgnoreCase(args[0]))) {
 					if(Main.instance.boss == null) {
 						p.sendMessage("ボスが設置されていません");
@@ -108,20 +109,10 @@ public class Main extends JavaPlugin implements Listener {
 					}
 					Main.instance.boss.kill();
 					Main.instance.boss = null;
-				} else if((args.length == 2) && ("rad").equalsIgnoreCase(args[0])){ 
-					Player player2 = Bukkit.getPlayer(args[1]);
-					if(player2 == null)
-						return false;
-					Location loc = p.getLocation(), loc2 = player2.getLocation();
-					DetailsColor color = DetailsColorType.WoolColor_GREEN.getColor();
-					for(double radius = 0; radius <= 20; radius+= 0.2) {
-						Main.sendPlayersParticle(EnumParticle.REDSTONE, 
-								loc.clone().add(new Polar_coodinates(loc.getWorld(), radius, Math.atan2(loc2.getX()-loc.getX(), loc2.getZ()-loc.getZ()), 0).convertLocation()), 
-								color.getRed(), 
-								color.getGreen(), 
-								color.getBlue(),
-								Bukkit.getOnlinePlayers());
-					}
+				} else if((args.length == 1) && ("font").equalsIgnoreCase(args[0])){ 
+					Title.sendTitle(p, 0, 600, 0, "ABCDEFGHIJKLMNOPQRSTUVWXYZ", "");
+				} else if((args.length == 1) && ("font2").equalsIgnoreCase(args[0])){
+					Title.sendTitle(p, 0, 600, 0, "abcdefghijklmnopqrstuvwxyz", "");
 				} else if((args.length == 1) && ("boss_ai").equalsIgnoreCase(args[0])) { 
 					Vector vec1 = boss.getBoss().getLocation().getDirection(); 
 					boss.getBoss().setVelocity(new Vector(-vec1.getX(), -vec1.getY(), -vec1.getZ()));
@@ -137,10 +128,12 @@ public class Main extends JavaPlugin implements Listener {
 						return false;
 					}
 					new Boss_Exception(Main.instance.boss).start();
-				} else if((args.length == 4) && ("setshield".equalsIgnoreCase(args[0]))) {
-					Test2.x = Integer.valueOf(args[1]).intValue();
-					Test2.y = Integer.valueOf(args[2]).intValue();
-					Test2.z = Integer.valueOf(args[3]).intValue();
+				} else if((args.length == 2) && ("boss_an".equalsIgnoreCase(args[0]))) {
+					if(Main.instance.boss == null) {
+						p.sendMessage("ボスが設置されていません");
+						return false;
+					}
+					new PowerUpAncestors(Main.instance.boss, Integer.valueOf(args[1]));
 				} else if((args.length == 1) && ("stop".equalsIgnoreCase(args[0]))) {
 					if(p.hasMetadata(Collectmovemeta))
 						p.removeMetadata(Collectmovemeta, this);

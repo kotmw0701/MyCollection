@@ -18,8 +18,7 @@ public class TargetBeam extends SkillBase {
 	
 	public TargetBeam(Boss boss) {
 		super(boss);
-		boss.getBoss().setAI(false);
-		boss.getBoss().setTarget(null);
+		setBossStatus(false, true);
 		loc2 = boss.getHatePlayer(1).getLocation();
 		theta = Math.atan2(loc2.getX()-loc.getX(), loc2.getZ()-loc.getZ());
 		bsr = new BossAttackRange_Rectangle(boss, boss.getBoss().getLocation(), 30, 4, theta);

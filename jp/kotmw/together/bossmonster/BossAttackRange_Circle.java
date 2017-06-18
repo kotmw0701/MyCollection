@@ -76,7 +76,6 @@ public class BossAttackRange_Circle extends BossAttackRange {
 		try {
 			Expansion();
 			while(!boss.getBoss().isDead() && !cancel) {
-				Thread.sleep(showtick);
 				if(radius_ >= radius)
 					radius_ = 0;
 				for(Location center : this.centers) {
@@ -86,6 +85,7 @@ public class BossAttackRange_Circle extends BossAttackRange {
 					}
 				}
 				radius_+=0.2;
+				Thread.sleep(showtick);
 			}
 		} catch (InterruptedException e) {
 			e.printStackTrace();

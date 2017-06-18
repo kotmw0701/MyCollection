@@ -90,6 +90,7 @@ public class Test2 implements Listener {
 			count = 0;
 			player.getWorld().getLivingEntities().stream()
 			.filter(entity -> entity.getType().equals(EntityType.ARMOR_STAND))
+			.filter(entity -> entity.getCustomName() != null)
 			.filter(entity -> entity.getCustomName().equalsIgnoreCase("Target"))
 			.forEach(entity -> {
 				if(count >= 10)

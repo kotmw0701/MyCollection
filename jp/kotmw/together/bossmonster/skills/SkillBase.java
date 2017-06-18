@@ -1,10 +1,10 @@
 package jp.kotmw.together.bossmonster.skills;
 
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.Creature;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
-import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
 
 import jp.kotmw.together.Main;
@@ -59,12 +59,13 @@ public abstract class SkillBase extends Thread {
 		if(entity == null || !(entity instanceof LivingEntity))
 			return;
 		LivingEntity livingentity = (LivingEntity)entity;
-		(new BukkitRunnable() {
-			@Override
-			public void run() {
-				livingentity.damage(boss.getDiffDamage(damage), boss.getBoss());
-			}
-		}).runTask(Main.instance);
+		syncThread(() -> {
+			livingentity.damage(boss.getDiffDamage(damage), boss.getBoss());
+		});
+	}
+	
+	protected void syncThread(Runnable runnable) {
+		Bukkit.getScheduler().runTask(Main.instance, runnable);
 	}
 	
 	protected void sendReddust(Location center, DetailsColor color) {
@@ -98,6 +99,12 @@ public abstract class SkillBase extends Thread {
 		boolean a = aabb.a(entityloc.getX()-0.4, entityloc.getY()-0.0, entityloc.getZ()-0.4, entityloc.getX()+0.4, entityloc.getY()+1.8, entityloc.getZ()+0.4);
 		if(a) syncDamage(damage, entity);
 	}
+	
+	protected void setBossStatus(boolean ai, boolean playerturn) {
+		boss.getBoss().setAI(ai);
+		boss.setPlayerTurn(playerturn);
+	}
+	
 	protected void resetLocation() {
 		getBoss().teleport(boss.getCenterLocation());
 		getBoss().setVelocity(new Vector(0, 0, 0));
@@ -108,7 +115,7 @@ public abstract class SkillBase extends Thread {
 		start();
 	}
 	
-	public void cancel() {
+	public synchronized void cancel() {
 		running = false;
 		boss.setPlayerTurn(true);
 		boss.getBoss().setAI(true);

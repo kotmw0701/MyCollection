@@ -21,23 +21,33 @@ public class RotationAttack extends SkillBase {
 	
 	public RotationAttack(Boss boss) {
 		super(boss);
-		boss.getBoss().setAI(false);
-		boss.getBoss().setTarget(null);
+		setBossStatus(false, false);
 		boss.sendChallengersMessage("ぐるぐる");
-		boss.setPlayerTurn(false);
 		reversal = new Random().nextBoolean();
 		setParam();
 		boss.sendChallengersTitle(0, 2, 0, ChatColor.RED.toString()+ChatColor.BOLD+(reversal ? "⟳" : "⟲"), "");
 		for(double theta2 = 0.0 ; theta2 <= 2*Math.PI ; theta2 += Math.PI/45)
 			sendReddust(boss.getBoss().getEyeLocation().clone().add(new Polar_coodinates(boss.getBoss().getLocation().getWorld(), 2, theta2, 0).convertLocation()).add(0, -0.5, 0), color2);
+		for(double radius = minradius; radius <= 30; radius+=0.2) {
+			for(double num = 0.0; num <= 2*Math.PI; num+=2*Math.PI/count) {
+				Polar_coodinates pc = new Polar_coodinates(boss.getBoss().getLocation().getWorld(), radius, Math.toRadians(boss.getBoss().getLocation().getYaw())+theta+num, 0);
+				sendReddust(boss.getBoss().getEyeLocation().clone().add(pc.convertLocation()).add(0, -0.5, 0),
+						color2,
+						true,
+						14.0);
+			}
+		}
 		runDelay(20);
 	}
 
 	@Override
 	protected void fire() throws InterruptedException {
 		while((reversal ? theta >= -2*Math.PI : theta <= 2*Math.PI)) {
-			sleep(speed);
-			for(double theta2 = 0.0 ; theta2 <= 2*Math.PI ; theta2 += Math.PI/90)
+			if(getBoss().isDead() || !isRunning()) {
+				cancel();
+				break;
+			}
+			for(double theta2 = 0.0 ; theta2 <= 2*Math.PI ; theta2 += Math.PI/30)
 				sendReddust(boss.getBoss().getEyeLocation().clone().add(new Polar_coodinates(boss.getBoss().getLocation().getWorld(), 2, theta2, 0).convertLocation()).add(0, -0.5, 0), color2);
 			for(double radius = minradius; radius <= 30; radius+=0.2) {
 				for(double num = 0.0; num <= 2*Math.PI; num+=2*Math.PI/count) {
@@ -49,6 +59,7 @@ public class RotationAttack extends SkillBase {
 				}
 			}
 			theta+=(reversal ? -Math.PI/180 : Math.PI/180);
+			sleep(speed);
 		}
 		cancel();
 	}
