@@ -23,10 +23,9 @@ public class PowerUpAncestors extends SkillBase {
 	
 	public PowerUpAncestors(Boss boss, int num) {
 		super(boss);
-		resetLocation();
 		setBossStatus(false, false);
 		syncThread(() -> {
-			Polar_coodinates pc = new Polar_coodinates(boss.getBoss().getWorld(), 10, 0, 0);
+			Polar_coodinates pc = new Polar_coodinates(boss.getBoss().getWorld(), 15, 0, 0);
 			for(double basetheta = 0.0; basetheta < 2*Math.PI; basetheta+= 2*Math.PI/num) {
 				pc.setTheta(basetheta);
 				Zombie zombie = (Zombie) boss.getBoss().getWorld().spawnEntity(boss.getCenterLocation().add(pc.convertLocation()), EntityType.ZOMBIE);

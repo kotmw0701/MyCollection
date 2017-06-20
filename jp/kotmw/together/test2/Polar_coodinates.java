@@ -30,6 +30,30 @@ public class Polar_coodinates {
 		return new Location(world, x, y, z);
 	}
 	
+	public Location rotation_Xaxis(double newtheta) {
+		Location loc = convertLocation();
+		double x = loc.getX(), y = loc.getY(), z = loc.getZ();
+		return new Location(world, x, y*Math.cos(newtheta)-z*Math.sin(newtheta), y*Math.sin(newtheta)+z*Math.cos(newtheta));
+	}
+
+	public Location rotation_Yaxis(double newtheta) {
+		Location loc = convertLocation();
+		double x = loc.getX(), y = loc.getY(), z = loc.getZ();
+		return new Location(world, x*Math.cos(newtheta)+z*Math.sin(newtheta), y, (-x)*Math.sin(newtheta)+z*Math.cos(newtheta));
+	}
+	
+	/**
+	 * converLocationとなんも変わらないよ((
+	 * ただ回転量が増えるだけ
+	 * 
+	 * @param newtheta 移動分の角度
+	 */
+	public Location rotation_Zaxis(double newtheta) {
+		Location loc = convertLocation();
+		double x = loc.getX(), y = loc.getY(), z = loc.getZ();
+		return new Location(world, x*Math.cos(newtheta)-y*Math.sin(newtheta), x*Math.sin(newtheta)+y*Math.cos(newtheta), z);
+	}
+	
 	public World getWorld() {return world;}
 	
 	public double getRadius() {return radius;}

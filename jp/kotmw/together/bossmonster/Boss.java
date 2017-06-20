@@ -63,7 +63,7 @@ public class Boss extends BukkitRunnable implements Listener{
 	public static final String BOSS_PREFIX = "[BossSystem"+(Main.bossdebug ? " - DebugMode" : "")+"] ";	
 	
 	public Boss(Location loc, String name) {
-		this.center = loc;
+		this.center = loc.clone();
 		this.name = name;
 		//resetShield();
 		bossbar = Bukkit.createBossBar(ChatColor.GOLD.toString()+ChatColor.BOLD+"Lv."+level+"  "+name+ChatColor.RESET, BarColor.GREEN, BarStyle.SEGMENTED_20, BarFlag.DARKEN_SKY);
@@ -229,7 +229,7 @@ public class Boss extends BukkitRunnable implements Listener{
 	}
 	
 	public Location getCenterLocation() {
-		return center;
+		return center.clone();
 	}
 	
 	public Creature getBoss() {
@@ -249,9 +249,21 @@ public class Boss extends BukkitRunnable implements Listener{
 	}
 	
 	public void setPlayerTurn(boolean playerturn) {
-		if((Bskill != null) && (Bskill.isRunning()))//DPSチェックの時だけは攻撃可能にするため
-			return;
-		this.playerturn = playerturn;
+		/*
+		 * メモ
+		 * ASkill
+		 *   RotationAttack
+		 *   FocusAttack
+		 *   TargetBeam
+		 * BSkill
+		 *   PowerUpAncestors
+		 *   DPSCheck
+		 *   
+		 * false -> true
+		 * のタイミングに両方とも動いてないかチェック(基本止めた後に変更するため問題ない)
+		 * 
+		 * 
+		 */
 		if(!playerturn) {
 			if(shield != null && shield.isRunning())
 				return;
@@ -259,10 +271,13 @@ public class Boss extends BukkitRunnable implements Listener{
 			shield.runTaskTimer(Main.instance, 0, 1);
 			this.shield = shield;
 		} else {
+			if(((Bskill != null) && (Bskill.isRunning())) || ((Askill != null) && (Askill.isRunning())))
+				return;
 			if(shield == null)
 				return;
 			shield.cancel();
 		}
+		this.playerturn = playerturn;
 	}
 	
 	public void addDamage(UUID player, double damage) {

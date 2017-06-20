@@ -47,14 +47,28 @@ public abstract class SkillBase extends Thread {
 		}
 	}
 	
+	/**
+	 * 
+	 * @return スキルを発動する対象のボス
+	 */
 	protected Creature getBoss() {
 		return boss.getBoss();
 	}
 	
+	/**
+	 * 
+	 * @param bsr 予測線クラスのスーパークラスを返す
+	 */
 	protected void setBSR(BossAttackRange bsr) {
 		this.bsr = bsr;
 	}
 	
+	/**
+	 * Bukkitのスレッドとは非同期のため、ダメージを非同期で与えて死んでしまうと、エラーが発生するために、同期処理を行う
+	 * 
+	 * @param damage ダメージ数(1.0でハート1個)
+	 * @param entity 対象のEntity
+	 */
 	protected void syncDamage(double damage, Entity entity) {
 		if(entity == null || !(entity instanceof LivingEntity))
 			return;
@@ -64,6 +78,10 @@ public abstract class SkillBase extends Thread {
 		});
 	}
 	
+	/**
+	 * 
+	 * @param runnable 同期させたい処理をぶち込む(雑
+	 */
 	protected void syncThread(Runnable runnable) {
 		Bukkit.getScheduler().runTask(Main.instance, runnable);
 	}
