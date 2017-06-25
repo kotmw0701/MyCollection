@@ -40,6 +40,7 @@ import jp.kotmw.together.bossmonster.Boss_Exception;
 import jp.kotmw.together.bossmonster.skills.PowerUpAncestors;
 import jp.kotmw.together.getvisibleplayer.Test1;
 import jp.kotmw.together.test2.Test2;
+import jp.kotmw.together.test3.Turret;
 import jp.kotmw.together.util.ParticleAPI;
 import jp.kotmw.together.util.ParticleAPI.EnumParticle;
 import jp.kotmw.together.util.Title;
@@ -88,6 +89,9 @@ public class Main extends JavaPlugin implements Listener {
 				Player p = (Player)s;
 				if((args.length == 1) && ("place".equalsIgnoreCase(args[0]))) {
 					p.setMetadata(Collectmovemeta, new FixedMetadataValue(this, p.getName()));
+				} else if((args.length == 1) && ("turret".equalsIgnoreCase(args[0]))) {
+					Turret turret = new Turret((ArmorStand) p.getLocation().getWorld().spawnEntity(p.getLocation(), EntityType.ARMOR_STAND));
+					turret.runTaskTimer(Main.instance, 3*20, 20);
 				} else if((args.length == 1) && ("boss_spawn".equalsIgnoreCase(args[0]))) {
 					if(Main.instance.boss != null && Main.instance.boss.isStarted())
 						return false;

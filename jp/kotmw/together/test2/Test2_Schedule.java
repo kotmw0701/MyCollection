@@ -34,7 +34,7 @@ public class Test2_Schedule extends BukkitRunnable {
 			Bukkit.getOnlinePlayers().stream().filter(player -> center.getWorld().getName().equals(player.getLocation().getWorld().getName()))
 			.forEach(player -> {
 				new ParticleAPI.Particle(EnumParticle.REDSTONE, 
-					center.clone().add(pc.rotation_Xaxis(Math.toRadians(30))), 
+					center.clone().add(pc.rotation_Yaxis(phirad)), 
 					color.getRed(), 
 					color.getGreen(), 
 					color.getBlue(), 

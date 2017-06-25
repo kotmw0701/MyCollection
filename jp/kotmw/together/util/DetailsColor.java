@@ -87,6 +87,10 @@ public class DetailsColor {
 			return new DetailsColor(code);
 		}
 		
+		public float getRed() {return getColor().red;}
+		public float getGreen() {return getColor().green;}
+		public float getBlue() {return getColor().blue;}
+		
 		public String getCode() {
 			return code;
 		}

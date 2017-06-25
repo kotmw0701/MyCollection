@@ -12,6 +12,7 @@ import jp.kotmw.together.bossmonster.Boss;
 import jp.kotmw.together.bossmonster.BossAttackRange;
 import jp.kotmw.together.util.DetailsColor;
 import jp.kotmw.together.util.ParticleAPI;
+import jp.kotmw.together.util.DetailsColor.DetailsColorType;
 import jp.kotmw.together.util.ParticleAPI.EnumParticle;
 import net.minecraft.server.v1_10_R1.AxisAlignedBB;
 
@@ -93,6 +94,13 @@ public abstract class SkillBase extends Thread {
 		sendParticle(EnumParticle.REDSTONE, center, color.getRed(), color.getGreen(), color.getBlue(), damage, damageparam);
 	}
 	
+	protected void sendReddust(Location center, DetailsColorType color) {
+		sendParticle(EnumParticle.REDSTONE, center, color.getRed(), color.getGreen(), color.getBlue(), false, 0.0);
+	}
+	protected void sendReddust(Location center, DetailsColorType color, boolean damage, double damageparam) {
+		sendParticle(EnumParticle.REDSTONE, center, color.getRed(), color.getGreen(), color.getBlue(), damage, damageparam);
+	}
+	
 	protected void sendParticle(EnumParticle type, Location center, float offsetX, float offsetY, float offsetZ) {
 		sendParticle(type, center, offsetX, offsetY, offsetZ, false, 0.0);
 	}
@@ -114,7 +122,7 @@ public abstract class SkillBase extends Thread {
 	protected void setDamageParticle(Location particleloc, double damage, Entity entity) {
 		AxisAlignedBB aabb = new AxisAlignedBB(particleloc.getX()+0.05, particleloc.getY()-0.05, particleloc.getZ()-0.05, particleloc.getX()+0.05, particleloc.getY()+0.05, particleloc.getZ()+0.05);
 		Location entityloc = entity.getLocation();
-		boolean a = aabb.a(entityloc.getX()-0.4, entityloc.getY()-0.0, entityloc.getZ()-0.4, entityloc.getX()+0.4, entityloc.getY()+1.8, entityloc.getZ()+0.4);
+		boolean a = aabb.b(new AxisAlignedBB(entityloc.getX()-0.4, entityloc.getY()-0.0, entityloc.getZ()-0.4, entityloc.getX()+0.4, entityloc.getY()+1.8, entityloc.getZ()+0.4));
 		if(a) syncDamage(damage, entity);
 	}
 	
