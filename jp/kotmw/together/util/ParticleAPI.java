@@ -268,13 +268,6 @@ public class ParticleAPI extends NMSBase{
 			default: return false;
 			}
 		}
-		
-		public boolean hasColorParticle() {
-			switch(this.type) {
-			case Color: return true;
-			default: return false;
-			}
-		}
 
 		/**
 		 * このパーティクルのデータ値に、引数のItemStackの情報を割り当てます。
