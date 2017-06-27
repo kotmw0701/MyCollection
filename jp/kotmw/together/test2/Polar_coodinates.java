@@ -3,7 +3,7 @@ package jp.kotmw.together.test2;
 import org.bukkit.Location;
 import org.bukkit.World;
 
-public class Polar_coodinates {
+public class Polar_coodinates implements Cloneable{
 	private World world;
 	private double radius; //r
 	private double theta; //θ ※ラジアン
@@ -54,6 +54,20 @@ public class Polar_coodinates {
 		return new Location(world, x*Math.cos(newtheta)-y*Math.sin(newtheta), x*Math.sin(newtheta)+y*Math.cos(newtheta), z);
 	}
 	
+	public Polar_coodinates add(Polar_coodinates pc) {
+		this.radius += pc.radius;
+		this.theta += pc.theta;
+		this.phi += pc.phi;
+		return this;
+	}
+	
+	public Polar_coodinates add(double radius, double theta, double phi) {
+		this.radius += radius;
+		this.theta += theta;
+		this.phi += phi;
+		return this;
+	}
+	
 	public World getWorld() {return world;}
 	
 	public double getRadius() {return radius;}
@@ -69,4 +83,13 @@ public class Polar_coodinates {
 	public void setTheta(double theta) {this.theta = theta;}
 
 	public void setPhi(double phi) {this.phi = phi;}
+	
+	@Override
+	public Polar_coodinates clone() {
+		try {
+			return (Polar_coodinates) super.clone();
+		} catch (CloneNotSupportedException e) {
+			throw new Error(e);
+		}
+	}
 }
