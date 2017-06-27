@@ -167,9 +167,18 @@ public class Test2 implements Listener {
 		}
 	}
 	
+	public void setLocView(Location center) {
+		DetailsColorType Xcolor = DetailsColorType.WoolColor_RED, Ycolor = DetailsColorType.WoolColor_GREEN, Zcolor = DetailsColorType.WoolColor_BLUE;
+		for(double x = -2.5; x <= 2.5; x += 0.2) {
+			sendReddust(center.clone().add(x, 0, 0), Xcolor.getColor(), false, 0);
+			sendReddust(center.clone().add(0, x, 0), Ycolor.getColor(), false, 0);
+			sendReddust(center.clone().add(0, 0, x), Zcolor.getColor(), false, 0);
+		}
+	}
+	
 	//////////////////////////////////////////////////////////////////////////////
 	protected void sendReddust(Location center, DetailsColor color, boolean damage, double damageparam) {
-		sendParticle(EnumParticle.FLAME, center, 0, 0, 0, damage, damageparam);
+		sendParticle(EnumParticle.REDSTONE, center, color.getRed(), color.getGreen(), color.getBlue(), damage, damageparam);
 	}
 	
 	protected void sendParticle(EnumParticle param1, Location param2, float param3, float param4, float param5, boolean param6, double param7) {
@@ -339,30 +348,33 @@ public class Test2 implements Listener {
 		
 		public TestClass3(Location center) {
 			this.center = center.clone().add(0, 0.3, 0);
-			this.yaw = Math.toRadians(-center.getYaw()+90);
-			this.pitch = Math.toRadians(center.getPitch()+90);
+			/*this.yaw = Math.toRadians(-center.getYaw()+90);
+			this.pitch = Math.toRadians(center.getPitch()+90);*/
 		}
 		
 		@Override
 		public void run() {
 			while(run) {
-				try {
-					sleep(50);
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-				}
+				setLocView(center);
 				for(double theta = 0.0; theta <= 2*Math.PI; theta += Math.PI/60) {
-					sendReddust(center.clone().add(new Polar_coodinates(center.getWorld(), radius, theta, pitch).rotation_Yaxis(yaw)), DetailsColorType.WoolColor_PURPLE.getColor(), false, 0);
-					sendReddust(center.clone().add(new Polar_coodinates(center.getWorld(), 8, theta, pitch).rotation_Yaxis(yaw)), DetailsColorType.WoolColor_PURPLE.getColor(), false, 0);
+					sendParticle(EnumParticle.FLAME, center.clone().add(new Polar_coodinates(center.getWorld(), radius, theta, pitch).rotation_Yaxis(yaw)), DetailsColorType.WoolColor_PURPLE.getColor());
+					sendParticle(EnumParticle.FLAME, center.clone().add(new Polar_coodinates(center.getWorld(), 8, theta, pitch).rotation_Yaxis(yaw)), DetailsColorType.WoolColor_PURPLE.getColor());
 				}
 				shape(center, 5.5, 3);
 				squad(center, 4, 3);
 				squad(center, 8, 6);
+				shape(center, 11, 8);
+				squad(center, 10, 6);
 				for(double theta = 0.0; theta <= 2*Math.PI; theta += 2*Math.PI/3) {
 					Polar_coodinates pc = new Polar_coodinates(center.getWorld(), 5.5, theta, pitch);
 					squad(center.clone().add(pc.rotation_Yaxis(yaw)), 1.5, 3);
 					for(double theta2 = 0.0; theta2 <= 2*Math.PI; theta2 += Math.PI/30)
-						sendReddust(center.clone().add(pc.rotation_Yaxis(yaw)).add(new Polar_coodinates(center.getWorld(), 1.5, theta2, pitch).rotation_Yaxis(yaw)), DetailsColorType.WoolColor_PURPLE.getColor(), false, 0);
+						sendParticle(EnumParticle.FLAME, center.clone().add(pc.rotation_Yaxis(yaw)).add(new Polar_coodinates(center.getWorld(), 1.5, theta2, pitch).rotation_Yaxis(yaw)), DetailsColorType.WoolColor_PURPLE.getColor());
+				}
+				try {
+					sleep(50);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
 				}
 			}
 		}
@@ -370,29 +382,42 @@ public class Test2 implements Listener {
 		//num 角形星
 		private void squad(Location center, double radius, double num) {
 			for(double theta = 0.0; theta <= 2*Math.PI; theta += Math.PI/num) {
-				Polar_coodinates pc1 = new Polar_coodinates(center.getWorld(), radius, theta, pitch);
-				Polar_coodinates pc2 = new Polar_coodinates(center.getWorld(), radius, theta+(2*Math.PI/num), pitch);
-				double max = pc1.convertLocation().distance(pc2.convertLocation());
-				for(double line = 0.0; line <= max; line += 0.2) {
-					pc2.setRadius(line);
-					pc2.setTheta(theta+((2+num)*Math.PI/(num*2)));
-					sendReddust(center.clone().add(pc1.rotation_Yaxis(yaw)).add(pc2.rotation_Yaxis(yaw)), DetailsColorType.WoolColor_PURPLE.getColor(), false, 0);
-				}
+				Polar_coodinates pc = new Polar_coodinates(center.getWorld(), radius, theta, pitch);
+				double max = pc.convertLocation().distance(pc.clone().add(0, theta+2*Math.PI/num, 0).convertLocation());
+				for(double line = 0.0; line <= max; line += 0.2)
+					sendParticle(EnumParticle.FLAME, center.clone().add(pc.rotation_Yaxis(yaw)).add(pc.clone().add(line, ((2+num)*Math.PI/(num*2)), 0).rotation_Yaxis(yaw)), DetailsColorType.WoolColor_PURPLE.getColor());
 			}
 		}
 		
 		//num 角形
 		private void shape(Location center, double radius, double num) {
 			for(double theta = 0.0; theta <= 2*Math.PI; theta += Math.PI/num) {
-				Polar_coodinates pc1 = new Polar_coodinates(center.getWorld(), radius, theta, pitch);
-				Polar_coodinates pc2 = new Polar_coodinates(center.getWorld(), radius, theta+(Math.PI/num), pitch);
-				double max = pc1.convertLocation().distance(pc2.convertLocation());
-				for(double line = 0.0; line <= max; line += 0.2) {
-					pc2.setRadius(line);
-					pc2.setTheta(theta+(2*Math.PI/num*(num+1)));
-					sendReddust(center.clone().add(pc1.rotation_Yaxis(yaw)).add(pc2.rotation_Yaxis(yaw)), DetailsColorType.WoolColor_PURPLE.getColor(), false, 0);
-				}
+				Polar_coodinates pc = new Polar_coodinates(center.getWorld(), radius, theta, pitch);
+				double max = pc.convertLocation().distance(pc.clone().add(0, theta+(Math.PI/num), 0).convertLocation());
+				for(double line = 0.0; line <= max; line += 0.2)
+					sendParticle(EnumParticle.FLAME, center.clone().add(pc.rotation_Yaxis(yaw)).add(pc.clone().add(line, (num*Math.PI+Math.PI)/(2*num), 0).rotation_Yaxis(yaw)), DetailsColorType.WoolColor_PURPLE.getColor());
 			}
+		}
+		
+		void sendParticle(EnumParticle particle, Location center, DetailsColor color) {
+			if(particle.hasColorParticle()) {
+				sendParticle(particle, center, color.getRed(), color.getGreen(), color.getBlue());
+				return;
+			}
+			sendParticle(particle, center, 0, 0, 0);
+		}
+		
+		void sendParticle(EnumParticle particle, Location center, float x, float y, float z) {
+			Bukkit.getOnlinePlayers().stream().filter(player -> center.getWorld().getName().equals(player.getLocation().getWorld().getName()))
+			.forEach(player -> {
+				new ParticleAPI.Particle(particle, 
+						center, 
+						x, 
+						y, 
+						z, 
+						1, 
+						0).sendParticle(player);
+			});
 		}
 	}
 	
